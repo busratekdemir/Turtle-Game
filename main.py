@@ -3,7 +3,8 @@ import random
 
 draw = turtle.Screen()
 draw.bgcolor("silver")
-draw.title("Cath the Turtle")
+draw.title("Catch the Turtle")
+draw.setup(800, 600)  # Ekran boyutunu belirledik
 
 little_turtle = turtle.Turtle()
 little_turtle.shape("turtle")
@@ -12,82 +13,109 @@ little_turtle.shapesize(2, 2)
 little_turtle.penup()
 little_turtle.speed(0)
 
-#skor tablosu için panel
-panel=turtle.Turtle()
+# Skor tablosu için panel
+panel = turtle.Turtle()
 panel.hideturtle()
 panel.penup()
-panel.goto(0,260)
+panel.goto(0, 260)
 
-#oyun mesajları için
-message_Box=turtle.Turtle()
+# Oyun mesajları için
+message_Box = turtle.Turtle()
 message_Box.hideturtle()
 message_Box.penup()
-message_Box.goto(0,20)
+message_Box.goto(0, 0)
 
-skor=0
-time=20
-over= False
-speed_ms=1100 #yer değiştirme hızı
-side=40
+skor = 0
+time = 20
+over = False
+speed_ms = 1100
+side = 60
+
 
 def panel_yaz(metin):
     panel.clear()
-    panel.write(metin, align="center",font=("Arial",12,"bold"))
+    panel.write(metin, align="center", font=("Arial", 16, "bold"))
+
 
 def panel_update():
-    panel_yaz(f"Time: {time} Skor: {skor}")
+    panel_yaz(f"Time: {time} | Score: {skor}")
 
 
-#kaplumbağa ekran içinde rastgele yerlere konumlara yerleşebilmeli
 def rand_pos():
-    w = draw.window_width() //2 -side # yarı genişlikten kenar payını düştük
-    h = draw.window_height() //2 -side #aynı şekilde yükseklik
-    return random.randint(-w,w), random.randint(-h,h)
+    w = (draw.window_width() // 2) - side
+    h = (draw.window_height() // 2) - side - 60
+
+    max_x = min(w, 350)
+    max_y = min(h, 200)
+    min_x = max(-w, -350)
+    min_y = max(-h, -200)
+
+    x = random.randint(min_x, max_x)
+    y = random.randint(min_y, max_y)
+
+    return x, y
+
 
 def hop():
-    if over: #over True dönerse çalışmayı bırakacak
+    if over:
         return
-    x,y = rand_pos() # rand_pos fonksiyonu çağırdık
-    little_turtle.setheading(random.randint(0,359))
-    little_turtle.goto(x,y)
-    draw.ontimer(hop,speed_ms)
+    x, y = rand_pos()
+    little_turtle.setheading(random.randint(0, 359))
+    little_turtle.goto(x, y)
 
-def hit(x,y):
+    current_speed = max(speed_ms - (skor * 50), 500)
+    draw.ontimer(hop, current_speed)
+
+
+def hit(x, y):
     global skor, speed_ms
-    if over: return
-    skor +=1
+    if over:
+        return
+    skor += 1
     panel_update()
+
     little_turtle.onclick(None)
-    hop()
+    little_turtle.goto(rand_pos())
     little_turtle.onclick(hit)
 
+
 def tick():
-    global time,over
-    if over: return
-    if time >0:
+    global time, over
+    if over:
+        return
+    if time > 0:
         panel_update()
-        time = time-1
-        draw.ontimer(tick,1000) #1sn sonra geri çağırır
+        time -= 1
+        draw.ontimer(tick, 1000)
     else:
         over = True
         little_turtle.onclick(None)
         message_Box.clear()
-        message_Box.write(f"Time over! \nSkor: {skor}",align="center",font=("Arial",28,"bold"))
+        message_Box.write(f"Time Over!\nScore: {skor}",
+                          align="center", font=("Arial", 24, "bold"))
+        message_Box.goto(0, -50)
+        message_Box.write("Press SPACE to restart",
+                          align="center", font=("Arial", 14, "normal"))
+
 
 def start():
-    global skor, time, over,speed_ms
+    global skor, time, over, speed_ms
     skor = 0
     time = 20
     over = False
     speed_ms = 1100
     panel_update()
     message_Box.clear()
+
     little_turtle.goto(rand_pos())
     little_turtle.onclick(hit)
     hop()
     tick()
 
-draw.onkey(start,"space")
+
+message_Box.write("Catch the Turtle!\nPress SPACE to start",
+                  align="center", font=("Arial", 18, "bold"))
+
+draw.onkey(start, "space")
 draw.listen()
-start()
 turtle.mainloop()
